@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Men's Discipleship Tracker</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --ink-soft: #667085;
+    --border: #e3e6ea;
+    --blue: #2563eb;
+    --blue-soft: #eaf0fe;
+    --green: #16a34a;
+    --green-soft: #e8f7ee;
+    --amber: #d97706;
+    --amber-soft: #fdf1e0;
+    --red: #dc2626;
+    --red-soft: #fceaea;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header .row {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-size: 19px;
+    margin: 0;
+    font-weight: 700;
+  }
+  header .sub {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  button, .btn {
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  button:hover, .btn:hover { border-color: #c7cbd1; }
+  button.primary {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+  }
+  button.primary:hover { background: #1d4fd1; }
+  button.ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--ink-soft);
+  }
+  button.small { padding: 5px 9px; font-size: 12px; }
+  button.danger { color: var(--red); }
+  button:disabled { opacity: 0.6; cursor: default; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+  .empty-state h2 { color: var(--ink); font-size: 17px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .name-block h3 { margin: 0; font-size: 16px; }
+  .name-block .phone { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+  .urgent-tag {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--red-soft);
+    color: var(--red);
+    white-space: nowrap;
+  }
+
+  .status-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .status-chip {
+    flex: 1;
+    min-width: 140px;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .status-chip.ok { background: var(--green-soft); color: var(--green); }
+  .status-chip.due { background: var(--amber-soft); color: var(--amber); }
+  .status-chip.overdue { background: var(--red-soft); color: var(--red); }
+  .status-chip .label { font-weight: 600; }
+  .status-chip button {
+    padding: 4px 8px;
+    font-size: 11.5px;
+    background: rgba(255,255,255,0.6);
+  }
+
+  .action-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .phase-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .phase-chip {
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .phase-chip.active {
+    background: var(--blue-soft);
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .details {
+    margin-top: 14px;
+    border-top: 1px dashed var(--border);
+    padding-top: 12px;
+  }
+  .details h4 { margin: 0 0 6px; font-size: 13px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+  .note-form { display: flex; gap: 8px; margin-bottom: 10px; }
+  .note-form textarea {
+    flex: 1;
+    resize: vertical;
+    min-height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 8px;
+    font: inherit;
+    font-size: 13px;
+  }
+  .note-entry {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+  .note-entry:last-child { border-bottom: none; }
+  .note-entry .date { color: var(--ink-soft); font-size: 11.5px; margin-bottom: 2px; }
+  .phase-dates { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+  .phase-dates span { margin-right: 14px; }
+
+  .toggle-details {
+    background: none;
+    border: none;
+    color: var(--blue);
+    padding: 0;
+    font-size: 12.5px;
+    margin-top: 10px;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(20,22,30,0.4);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px;
+    z-index: 50;
+    overflow-y: auto;
+  }
+  .modal {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 420px;
+    width: 100%;
+  }
+  .modal h2 { margin-top: 0; font-size: 17px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 4px; color: var(--ink-soft); }
+  .field input, .field textarea {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font: inherit;
+    font-size: 14px;
+  }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+  .hint {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: -6px;
+    margin-bottom: 16px;
+  }
+  #importFile { display: none; }
+
+  /* ---- login / auth screens ---- */
+  .auth-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .auth-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    max-width: 360px;
+    width: 100%;
+  }
+  .auth-box h1 { font-size: 18px; margin: 0 0 4px; }
+  .auth-box p.sub { color: var(--ink-soft); font-size: 13px; margin: 0 0 20px; }
+  .auth-error {
+    background: var(--red-soft);
+    color: var(--red);
+    font-size: 12.5px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .auth-box button[type="submit"] { width: 100%; justify-content: center; margin-top: 4px; }
+  .auth-note { font-size: 11.5px; color: var(--ink-soft); margin-top: 16px; text-align: center; }
+  .who { font-size: 12.5px; color: var(--ink-soft); }
+  #signOutBtn { padding: 5px 9px; font-size: 12px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- Signed-out screen -->
+<div class="auth-wrap" id="authScreen" hidden>
+  <div class="auth-box">
+    <h1>Men's Discipleship Tracker</h1>
+    <p class="sub">Sign in to see your list.</p>
+    <div class="auth-error" id="authError"></div>
+    <form id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="primary" id="loginBtn">Sign in</button>
+    </form>
+    <p class="auth-note">Trouble signing in? Reset your password from the Firebase console under Authentication.</p>
+  </div>
+</div>
+
+<!-- Signed-in app -->
+<div id="appScreen" hidden>
+  <header>
+    <div class="row">
+      <div>
+        <h1>Men's Discipleship Tracker</h1>
+        <div class="sub" id="subheading"></div>
+      </div>
+      <div class="header-actions">
+        <span class="who" id="whoAmI"></span>
+        <button class="ghost small" id="exportBtn">Export backup</button>
+        <button class="ghost small" id="importBtn">Import backup</button>
+        <input type="file" id="importFile" accept="application/json">
+        <button class="primary" id="addPersonBtn">+ Add Man</button>
+        <button class="ghost" id="signOutBtn">Sign out</button>
+      </div>
+    </div>
+  </header>
+  <main id="main"></main>
+</div>
+
+<!-- Firebase (compat SDK — works with plain <script> tags, no build step) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  // ============================================================
+  // PASTE YOUR FIREBASE CONFIG HERE
+  // Firebase console → Project settings → General → "Your apps" →
+  // Web app → SDK setup and configuration → Config.
+  // These values are safe to leave visible in the page source —
+  // they identify your project, they are not secret credentials.
+  // Actual privacy is enforced by the Firestore security rules and
+  // the login screen, not by hiding this object.
+  // ============================================================
+  var firebaseConfig = {
+    apiKey: "AIzaSyDAXxXtuYnuxwUtY4PrFSImVazE-QyvQA4",
+    authDomain: "discipleship-tracker-1e67a.firebaseapp.com",
+    projectId: "discipleship-tracker-1e67a",
+    storageBucket: "discipleship-tracker-1e67a.firebasestorage.app",
+    messagingSenderId: "903960538486",
+    appId: "1:903960538486:web:36077eee0bdd8c105d1e57"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  var auth = firebase.auth();
+  var db = firebase.firestore();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+  var PHASES = [
+    { key: "church", label: "Attending Church" },
+    { key: "serving", label: "Serving in Church" },
+    { key: "bibleStudy", label: "Bible Study (Fri AM or Mon PM)" }
+  ];
+
+  var data = { people: [] };
+  var openDetailIds = {};
+  var currentUser = null;
+  var peopleUnsubscribe = null;
+
+  // Merge old separate "Friday Breakfast" / "Monday Night" toggles into the
+  // combined "Bible Study" phase, keeping the earliest start date. Only
+  // relevant when importing an older backup file.
+  function migrateBibleStudyPhase(person) {
+    if (!person.phases) person.phases = {};
+    var friday = person.phases.fridayBreakfast;
+    var monday = person.phases.mondayNight;
+    if (!friday && !monday) return;
+
+    var active = (friday && friday.active) || (monday && monday.active);
+    var starts = [friday && friday.startDate, monday && monday.startDate].filter(Boolean).sort();
+    var existing = person.phases.bibleStudy;
+
+    person.phases.bibleStudy = {
+      active: active || (existing && existing.active) || false,
+      startDate: (existing && existing.startDate) || starts[0] || null
+    };
+    delete person.phases.fridayBreakfast;
+    delete person.phases.mondayNight;
+  }
+
+  // ---------- date helpers ----------
+  function todayISO() {
+    return dateOnlyISO(new Date());
+  }
+
+  function dateOnlyISO(d) {
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  // Monday-start week key, e.g. "2026-07-13"
+  function weekKey(iso) {
+    var d = new Date(iso + "T00:00:00");
+    var dow = d.getDay(); // 0 = Sunday
+    var diffToMonday = (dow === 0) ? -6 : 1 - dow;
+    d.setDate(d.getDate() + diffToMonday);
+    return dateOnlyISO(d);
+  }
+
+  function isThisWeek(iso) {
+    if (!iso) return false;
+    return weekKey(iso) === weekKey(todayISO());
+  }
+
+  function daysSince(iso) {
+    if (!iso) return null;
+    var a = new Date(iso + "T00:00:00");
+    var b = new Date(todayISO() + "T00:00:00");
+    return Math.round((b - a) / 86400000);
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "";
+    var d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function cleanPhone(phone) {
+    return (phone || "").replace(/[^\d+]/g, "");
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  // ---------- urgency / sorting ----------
+  function urgencyScore(person) {
+    var prayedDays = person.lastPrayed ? daysSince(person.lastPrayed) : 9999;
+    var checkinDays = person.lastCheckedIn ? daysSince(person.lastCheckedIn) : 9999;
+    return Math.max(prayedDays, checkinDays);
+  }
+
+  function sortedPeople() {
+    return data.people.slice().sort(function (a, b) {
+      return urgencyScore(b) - urgencyScore(a);
+    });
+  }
+
+  function peopleCollection() {
+    return db.collection("users").doc(currentUser.uid).collection("people");
+  }
+
+  // ---------- rendering ----------
+  var main = document.getElementById("main");
+  var subheading = document.getElementById("subheading");
+
+  function render() {
+    var people = sortedPeople();
+    subheading.textContent = people.length
+      ? people.length + " " + (people.length === 1 ? "man" : "men") + " being followed up with"
+      : "Track prayer, check-ins, and growth for the men you're discipling";
+
+    if (!people.length) {
+      main.innerHTML = '<div class="empty-state"><h2>No one added yet</h2><p>Click "+ Add Man" to start tracking someone.</p></div>';
+      return;
+    }
+
+    var html = people.map(renderCard).join("");
+    main.innerHTML = html;
+    attachCardListeners();
+  }
+
+  function statusChip(type, iso, labelOk, labelNever, labelPast) {
+    var thisWeek = isThisWeek(iso);
+    var never = !iso;
+    var days = daysSince(iso);
+    var cls = thisWeek ? "ok" : (never ? "overdue" : (days > 7 ? "overdue" : "due"));
+    var text = thisWeek
+      ? labelOk
+      : (never ? labelNever : labelPast + " " + days + "d ago");
+    return (
+      '<div class="status-chip ' + cls + '">' +
+        '<span class="label">' + text + "</span>" +
+        '<button class="small" data-action="' + type + '">Mark done</button>' +
+      "</div>"
+    );
+  }
+
+  function renderCard(person) {
+    var open = !!openDetailIds[person.id];
+    var score = urgencyScore(person);
+    var urgentTag = score >= 14 ? '<span class="urgent-tag">Overdue</span>' : "";
+    var phoneDigits = cleanPhone(person.phone);
+    var notesNewestFirst = person.notes.slice().reverse();
+
+    var phasesHtml = PHASES.map(function (ph) {
+      var state = person.phases[ph.key] || { active: false, startDate: null };
+      return (
+        '<div class="phase-chip ' + (state.active ? "active" : "") + '" data-phase="' + ph.key + '">' +
+        ph.label +
+        "</div>"
+      );
+    }).join("");
+
+    var phaseDatesHtml = PHASES.filter(function (ph) {
+      var s = person.phases[ph.key];
+      return s && s.active && s.startDate;
+    }).map(function (ph) {
+      var s = person.phases[ph.key];
+      return "<span>" + ph.label + " since " + formatDate(s.startDate) + "</span>";
+    }).join("");
+
+    var notesPreview = notesNewestFirst.length
+      ? '<div class="note-entry"><div class="date">' + formatDate(notesNewestFirst[0].date) + '</div>' + escapeHtml(notesNewestFirst[0].text) + "</div>"
+      : '<div class="note-entry" style="color:var(--ink-soft)">No notes yet.</div>';
+
+    var detailsHtml = "";
+    if (open) {
+      var allNotesHtml = notesNewestFirst.length
+        ? notesNewestFirst.map(function (n) {
+            return '<div class="note-entry"><div class="date">' + formatDate(n.date) + '</div>' + escapeHtml(n.text) + "</div>";
+          }).join("")
+        : '<div class="note-entry" style="color:var(--ink-soft)">No notes yet.</div>';
+
+      detailsHtml =
+        '<div class="details">' +
+          "<h4>What he's facing / notes</h4>" +
+          '<div class="note-form">' +
+            '<textarea placeholder="Add a note about how he\'s doing..." data-note-input></textarea>' +
+            '<button class="primary small" data-action="add-note">Add</button>' +
+          "</div>" +
+          allNotesHtml +
+          (phaseDatesHtml ? '<div class="phase-dates">' + phaseDatesHtml + "</div>" : "") +
+          '<div class="action-row" style="margin-top:14px;">' +
+            '<button class="ghost small" data-action="edit-person">Edit name / phone</button>' +
+            '<button class="danger ghost small" data-action="delete-person">Delete</button>' +
+          "</div>" +
+        "</div>";
+    } else {
+      detailsHtml = '<div class="details">' + notesPreview + "</div>";
+    }
+
+    return (
+      '<div class="card" data-id="' + person.id + '">' +
+        '<div class="card-top">' +
+          '<div class="name-block">' +
+            "<h3>" + escapeHtml(person.name) + "</h3>" +
+            '<div class="phone">' + escapeHtml(person.phone || "No phone on file") + "</div>" +
+          "</div>" +
+          urgentTag +
+        "</div>" +
+
+        '<div class="status-row">' +
+          statusChip("prayed", person.lastPrayed, "Prayed for this week", "Never prayed for yet", "Last prayed") +
+          statusChip("checkedin", person.lastCheckedIn, "Checked in this week", "Never checked in yet", "Last checked in") +
+        "</div>" +
+
+        '<div class="action-row">' +
+          (phoneDigits ? '<a class="btn small" href="sms:' + phoneDigits + '">Text him</a>' : "") +
+          (phoneDigits ? '<a class="btn small" href="tel:' + phoneDigits + '">Call him</a>' : "") +
+        "</div>" +
+
+        '<div class="phase-row">' + phasesHtml + "</div>" +
+
+        detailsHtml +
+
+        '<button class="toggle-details" data-action="toggle-details">' +
+          (open ? "Hide details ↑" : "Show notes & edit ↓") +
+        "</button>" +
+      "</div>"
+    );
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement("div");
+    div.textContent = str || "";
+    return div.innerHTML;
+  }
+
+  // ---------- event wiring ----------
+  function attachCardListeners() {
+    main.querySelectorAll(".card").forEach(function (card) {
+      var id = card.getAttribute("data-id");
+      var person = data.people.find(function (p) { return p.id === id; });
+      if (!person) return;
+      var docRef = peopleCollection().doc(id);
+
+      card.querySelectorAll("[data-action]").forEach(function (el) {
+        el.addEventListener("click", function () {
+          var action = el.getAttribute("data-action");
+          if (action === "prayed") {
+            docRef.update({ lastPrayed: todayISO() });
+          } else if (action === "checkedin") {
+            docRef.update({ lastCheckedIn: todayISO() });
+          } else if (action === "toggle-details") {
+            openDetailIds[id] = !openDetailIds[id];
+            render();
+          } else if (action === "add-note") {
+            var textarea = card.querySelector("[data-note-input]");
+            var text = textarea.value.trim();
+            if (!text) return;
+            docRef.update({
+              notes: firebase.firestore.FieldValue.arrayUnion({ id: uid(), text: text, date: todayISO() })
+            });
+          } else if (action === "edit-person") {
+            openEditModal(person, docRef);
+          } else if (action === "delete-person") {
+            if (confirm("Remove " + person.name + " from the tracker? This can't be undone.")) {
+              docRef.delete();
+            }
+          }
+        });
+      });
+
+      card.querySelectorAll(".phase-chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          var key = chip.getAttribute("data-phase");
+          var current = person.phases[key] || { active: false, startDate: null };
+          var nowActive = !current.active;
+          var update = {};
+          update["phases." + key] = {
+            active: nowActive,
+            startDate: nowActive ? (current.startDate || todayISO()) : current.startDate
+          };
+          docRef.update(update);
+        });
+      });
+    });
+  }
+
+  // ---------- add / edit modal ----------
+  function openAddModal() {
+    var backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    backdrop.innerHTML =
+      '<div class="modal">' +
+        "<h2>Add a Man</h2>" +
+        '<div class="field"><label>Name</label><input type="text" id="m-name" placeholder="John Smith"></div>' +
+        '<div class="field"><label>Phone number</label><input type="text" id="m-phone" placeholder="(555) 123-4567"></div>' +
+        '<div class="field"><label>What he\'s currently facing (optional)</label><textarea id="m-note" placeholder="e.g. Walking through a hard season at work..."></textarea></div>' +
+        '<div class="modal-actions">' +
+          '<button class="ghost" data-close>Cancel</button>' +
+          '<button class="primary" data-save>Add</button>' +
+        "</div>" +
+      "</div>";
+    document.body.appendChild(backdrop);
+
+    backdrop.addEventListener("click", function (e) {
+      if (e.target === backdrop || e.target.hasAttribute("data-close")) {
+        document.body.removeChild(backdrop);
+      }
+    });
+
+    backdrop.querySelector("[data-save]").addEventListener("click", function () {
+      var name = backdrop.querySelector("#m-name").value.trim();
+      var phone = backdrop.querySelector("#m-phone").value.trim();
+      var note = backdrop.querySelector("#m-note").value.trim();
+      if (!name) { alert("Please enter a name."); return; }
+
+      var phases = {};
+      PHASES.forEach(function (ph) { phases[ph.key] = { active: false, startDate: null }; });
+
+      var person = {
+        name: name,
+        phone: phone,
+        notes: note ? [{ id: uid(), text: note, date: todayISO() }] : [],
+        phases: phases,
+        lastPrayed: null,
+        lastCheckedIn: null
+      };
+      peopleCollection().add(person);
+      document.body.removeChild(backdrop);
+    });
+  }
+
+  function openEditModal(person, docRef) {
+    var backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    backdrop.innerHTML =
+      '<div class="modal">' +
+        "<h2>Edit Details</h2>" +
+        '<div class="field"><label>Name</label><input type="text" id="e-name" value="' + escapeHtml(person.name) + '"></div>' +
+        '<div class="field"><label>Phone number</label><input type="text" id="e-phone" value="' + escapeHtml(person.phone || "") + '"></div>' +
+        '<div class="modal-actions">' +
+          '<button class="ghost" data-close>Cancel</button>' +
+          '<button class="primary" data-save>Save</button>' +
+        "</div>" +
+      "</div>";
+    document.body.appendChild(backdrop);
+
+    backdrop.addEventListener("click", function (e) {
+      if (e.target === backdrop || e.target.hasAttribute("data-close")) {
+        document.body.removeChild(backdrop);
+      }
+    });
+
+    backdrop.querySelector("[data-save]").addEventListener("click", function () {
+      var name = backdrop.querySelector("#e-name").value.trim();
+      var phone = backdrop.querySelector("#e-phone").value.trim();
+      if (!name) { alert("Please enter a name."); return; }
+      docRef.update({ name: name, phone: phone });
+      document.body.removeChild(backdrop);
+    });
+  }
+
+  document.getElementById("addPersonBtn").addEventListener("click", openAddModal);
+
+  // ---------- export / import ----------
+  document.getElementById("exportBtn").addEventListener("click", function () {
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "discipleship-tracker-backup-" + todayISO() + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  var importFileInput = document.getElementById("importFile");
+  document.getElementById("importBtn").addEventListener("click", function () {
+    importFileInput.click();
+  });
+  importFileInput.addEventListener("change", function () {
+    var file = importFileInput.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var parsed = JSON.parse(reader.result);
+        if (!parsed.people || !Array.isArray(parsed.people)) throw new Error("Invalid file");
+        if (!confirm("Import will replace all current data in the cloud with the backup file. Continue?")) return;
+        parsed.people.forEach(migrateBibleStudyPhase);
+
+        var col = peopleCollection();
+        col.get().then(function (snapshot) {
+          var batch = db.batch();
+          snapshot.docs.forEach(function (d) { batch.delete(d.ref); });
+          parsed.people.forEach(function (p) {
+            var personData = {
+              name: p.name || "",
+              phone: p.phone || "",
+              notes: p.notes || [],
+              phases: p.phases || {},
+              lastPrayed: p.lastPrayed || null,
+              lastCheckedIn: p.lastCheckedIn || null
+            };
+            var ref = p.id ? col.doc(p.id) : col.doc();
+            batch.set(ref, personData);
+          });
+          return batch.commit();
+        }).catch(function (err) {
+          alert("Import failed: " + err.message);
+        });
+      } catch (e) {
+        alert("Couldn't read that file. Make sure it's a backup exported from this app.");
+      }
+    };
+    reader.readAsText(file);
+    importFileInput.value = "";
+  });
+
+  // ---------- auth ----------
+  var authScreen = document.getElementById("authScreen");
+  var appScreen = document.getElementById("appScreen");
+  var authError = document.getElementById("authError");
+  var whoAmI = document.getElementById("whoAmI");
+
+  function showAuthError(message) {
+    authError.textContent = message;
+    authError.style.display = "block";
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    authError.style.display = "none";
+    var email = document.getElementById("loginEmail").value.trim();
+    var password = document.getElementById("loginPassword").value;
+    var btn = document.getElementById("loginBtn");
+    btn.disabled = true;
+    auth.signInWithEmailAndPassword(email, password)
+      .catch(function (err) {
+        showAuthError(err.message || "Couldn't sign in. Check your email and password.");
+      })
+      .finally(function () {
+        btn.disabled = false;
+      });
+  });
+
+  document.getElementById("signOutBtn").addEventListener("click", function () {
+    auth.signOut();
+  });
+
+  auth.onAuthStateChanged(function (user) {
+    if (peopleUnsubscribe) { peopleUnsubscribe(); peopleUnsubscribe = null; }
+
+    if (user) {
+      currentUser = user;
+      authScreen.hidden = true;
+      appScreen.hidden = false;
+      whoAmI.textContent = user.email;
+
+      peopleUnsubscribe = peopleCollection().onSnapshot(function (snapshot) {
+        data.people = snapshot.docs.map(function (d) {
+          var p = Object.assign({ id: d.id }, d.data());
+          if (!p.phases) p.phases = {};
+          if (!p.notes) p.notes = [];
+          migrateBibleStudyPhase(p);
+          return p;
+        });
+        render();
+      }, function (err) {
+        main.innerHTML = '<div class="empty-state"><h2>Couldn\'t load your list</h2><p>' + escapeHtml(err.message) + "</p></div>";
+      });
+    } else {
+      currentUser = null;
+      data.people = [];
+      appScreen.hidden = true;
+      authScreen.hidden = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
